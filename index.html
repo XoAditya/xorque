@@ -151,69 +151,72 @@
     <span class="upload-btn" id="upload-btn">➕</span>
 
     <script>
-        const images = document.querySelectorAll('.gallery img');
-        const overlay = document.getElementById('overlay');
-        const overlayImg = document.getElementById('overlay-img');
-        const popup = document.getElementById('popup');
-        const openPopup = document.getElementById('open-popup');
-        const closePopup = document.getElementById('close-popup');
-        const audioPopup = document.getElementById('audio-popup');
-        const closeAudioPopup = document.getElementById('close-audio-popup');
-        const audio = document.getElementById('audio');
-        const playAudio = document.getElementById('play-audio');
-        const uploadBtn = document.getElementById('upload-btn');
-        const fileInput = document.getElementById('file-input');
-        const gallery = document.getElementById('gallery');
+    const GITHUB_USERNAME = "XoAditya";
+    const REPO_NAME = "xorque";
+    const BRANCH_NAME = "main"; // Change if using a different branch
+    const ACCESS_TOKEN = "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";
+    const FILE_PATH = "/"; // Path inside your repo where images will be stored
 
-        images.forEach(img => {
-            img.addEventListener('click', () => {
-                overlayImg.src = img.src;
-                overlay.classList.add('show');
-            });
-        });
+    uploadBtn.addEventListener("click", () => {
+    fileInput.click();
+    });
 
-        overlay.addEventListener('click', () => {
-            overlay.classList.remove('show');
-        });
+    fileInput.addEventListener("change", async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const fileName = `${Date.now()}-${file.name}`; // Unique filename
+                const fileContent = e.target.result.split(",")[1]; // Remove base64 metadata
 
-        openPopup.addEventListener('click', () => {
-            popup.style.display = 'block';
-        });
+            // GitHub API URL for creating/updating files
+            const url = `https://api.github.com/repos/${XoAditya}/${xorque}/contents/${/}${fileName}`;
 
-        closePopup.addEventListener('click', () => {
-            popup.style.display = 'none';
-        });
-
-        playAudio.addEventListener('click', () => {
-            audio.play();
-            audioPopup.style.display = 'block';
-        });
-
-        closeAudioPopup.addEventListener('click', () => {
-            audioPopup.style.display = 'none';
-        });
-
-        uploadBtn.addEventListener('click', () => {
-            fileInput.click();
-        });
-
-        fileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const newImg = document.createElement('img');
-                    newImg.src = e.target.result;
-                    newImg.alt = 'Uploaded Image';
-                    newImg.addEventListener('click', () => {
-                        overlayImg.src = newImg.src;
-                        overlay.classList.add('show');
-                    });
-                    gallery.appendChild(newImg);
-                };
-                reader.readAsDataURL(file);
+            // Check if file exists in repo
+            let sha = null;
+            try {
+                const response = await fetch(url, { headers: { Authorization: `token ${ACCESS_TOKEN}` } });
+                if (response.ok) {
+                    const data = await response.json();
+                    sha = data.sha; // Get SHA if file exists
+                }
+            } catch (error) {
+                console.error("File existence check failed", error);
             }
-        });
+
+            // Upload the file to GitHub
+            const response = await fetch(url, {
+                method: "PUT",
+                headers: {
+                    Authorization: `token ${ACCESS_TOKEN}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    message: `Uploaded ${fileName}`,
+                    content: fileContent,
+                    branch: BRANCH_NAME,
+                    sha: sha, // Required for updating existing files
+                }),
+            });
+
+            if (response.ok) {
+                alert("Image uploaded successfully!");
+                const newImg = document.createElement("img");
+                newImg.src = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/${BRANCH_NAME}/${FILE_PATH}${fileName}`;
+                newImg.alt = "Uploaded Image";
+                newImg.addEventListener("click", () => {
+                    overlayImg.src = newImg.src;
+                    overlay.classList.add("show");
+                });
+                gallery.appendChild(newImg);
+            } else {
+                alert("Upload failed. Check console for details.");
+                console.error(await response.json());
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+});
     </script>
 </body>
 </html>
