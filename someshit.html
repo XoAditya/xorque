@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        .menu-bar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 182, 193, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .menu-bar .icon {
+            cursor: pointer;
+            font-size: 24px;
+            margin: 0 20px;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            width: 80%;
+            max-width: 900px;
+            margin-top: 50px;
+        }
+        .gallery img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.3s ease-in-out;
+        }
+        .gallery img:hover {
+            transform: scale(1.05);
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s;
+        }
+        .overlay img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+        }
+        .overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            display: none;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            width: 60%;
+            max-width: 500px;
+            text-align: center;
+        }
+        .popup img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .popup .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            color: red;
+            font-weight: bold;
+        }
+        .upload-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            color: black;
+            font-size: 24px;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        #file-input {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-bar">
+        <span class="icon" id="play-audio">🎧</span>
+        <span class="icon" id="open-popup">📩</span>
+    </div>
+
+    <div class="gallery" id="gallery">
+        <script>
+            for (let i = 1; i <= 20; i++) {
+                document.write(`<img src="img${i}.png" alt="Gallery Image">`);
+            }
+        </script>
+    </div>
+
+    <div class="overlay" id="overlay">
+        <img id="overlay-img" src="" alt="Expanded View">
+    </div>
+
+    <div class="popup" id="popup">
+        <span class="close" id="close-popup">&times;</span>
+        <img src="popup.png" alt="Popup Image">
+    </div>
+
+    <div class="popup" id="audio-popup">
+        <span class="close" id="close-audio-popup">&times;</span>
+        <img src="xoa.png" alt="Audio Popup Image">
+    </div>
+
+    <audio id="audio" src="audio.mp3"></audio>
+
+    <input type="file" id="file-input" accept="image/*">
+    <span class="upload-btn" id="upload-btn">➕</span>
+
+    <script>
+        const images = document.querySelectorAll('.gallery img');
+        const overlay = document.getElementById('overlay');
+        const overlayImg = document.getElementById('overlay-img');
+        const popup = document.getElementById('popup');
+        const openPopup = document.getElementById('open-popup');
+        const closePopup = document.getElementById('close-popup');
+        const audioPopup = document.getElementById('audio-popup');
+        const closeAudioPopup = document.getElementById('close-audio-popup');
+        const audio = document.getElementById('audio');
+        const playAudio = document.getElementById('play-audio');
+        const uploadBtn = document.getElementById('upload-btn');
+        const fileInput = document.getElementById('file-input');
+        const gallery = document.getElementById('gallery');
+
+        images.forEach(img => {
+            img.addEventListener('click', () => {
+                overlayImg.src = img.src;
+                overlay.classList.add('show');
+            });
+        });
+
+        overlay.addEventListener('click', () => {
+            overlay.classList.remove('show');
+        });
+
+        openPopup.addEventListener('click', () => {
+            popup.style.display = 'block';
+        });
+
+        closePopup.addEventListener('click', () => {
+            popup.style.display = 'none';
+        });
+
+        playAudio.addEventListener('click', () => {
+            audio.play();
+            audioPopup.style.display = 'block';
+        });
+
+        closeAudioPopup.addEventListener('click', () => {
+            audioPopup.style.display = 'none';
+        });
+
+        uploadBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const newImg = document.createElement('img');
+                    newImg.src = e.target.result;
+                    newImg.alt = 'Uploaded Image';
+                    newImg.addEventListener('click', () => {
+                        overlayImg.src = newImg.src;
+                        overlay.classList.add('show');
+                    });
+                    gallery.appendChild(newImg);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>
